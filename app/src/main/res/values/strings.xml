@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">1MileDrivingApp</string>
+    <string name="waiting">Waiting to detect speed\n\n</string>
+    <string name="title_location_permission">Location Permission Needed</string>
+    <string name="ok">Ok</string>
+    <string name="text_location_permission">Please provide us location permission</string>
+    <string name="gps_network_not_enabled">GPS not available</string>
+    <string name="open_location_settings">Open Location setting</string>
+    <string name="cancel">Cancle</string>
+
+    <string name="lbl_you_are_at">YOU ARE AT</string>
+    <string name="btn_get_location">GET MY LOCATION</string>
+    <string name="btn_start_location_updates">START TRIP</string>
+    <string name="btn_stop_location_updates">STOP TRIP</string>
+</resources>
