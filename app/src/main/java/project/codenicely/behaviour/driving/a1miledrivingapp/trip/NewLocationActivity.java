@@ -1,6 +1,7 @@
 package project.codenicely.behaviour.driving.a1miledrivingapp.trip;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import com.google.android.gms.location.LocationServices;
 
 import java.util.List;
 
+import project.codenicely.behaviour.driving.a1miledrivingapp.MapsActivity;
 import project.codenicely.behaviour.driving.a1miledrivingapp.R;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.models.LocationData;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.DatabaseHandler;
@@ -192,6 +194,9 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
             stopLocationUpdates();
 
             Log.d(TAG, "Periodic location updates stopped!");
+            Intent intent = new Intent(this, MapsActivity.class);
+            startActivity(intent);
+
         }
     }
 

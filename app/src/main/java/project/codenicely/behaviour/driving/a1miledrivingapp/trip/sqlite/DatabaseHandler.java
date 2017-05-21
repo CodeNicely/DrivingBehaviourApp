@@ -118,4 +118,30 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return locationDataList;
     }
 
+
+    public float getSpeed(double latitude, double longitude) {
+
+        // Select All Query
+        float speed=100;
+        String selectQuery = "SELECT  * FROM " + TABLE_TRIPS + " WHERE "+
+                                     KEY_LATITUDE+"="+String.valueOf(latitude)+" AND " +
+                                     KEY_LONGITUDE+"="+String.valueOf(longitude);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                speed=Float.parseFloat(cursor.getString(3));
+//                locationData.setSpeed(Float.parseFloat(cursor.getString(3)));
+
+                // Adding contact to list
+            } while (cursor.moveToNext());
+        }
+
+        // return contact list
+        return speed;
+    }
+
 }
