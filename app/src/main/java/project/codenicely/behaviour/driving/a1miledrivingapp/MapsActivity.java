@@ -43,6 +43,9 @@ import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -61,7 +64,9 @@ import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.Databas
  * This shows how to draw polylines on a map.
  */
 public class MapsActivity extends AppCompatActivity
-        implements OnSeekBarChangeListener, OnItemSelectedListener, OnMapReadyCallback {
+        implements OnSeekBarChangeListener, OnItemSelectedListener,
+                           OnMapReadyCallback ,GoogleMap.OnMarkerClickListener,
+                           OnMapAndViewReadyListener.OnGlobalLayoutAndMapReadyListener {
 
     // City locations for mutable polyline.
    /* private static final LatLng ADELAIDE = new LatLng(-34.92873, 138.59995);
@@ -110,6 +115,10 @@ public class MapsActivity extends AppCompatActivity
     private CheckBox mClickabilityCheckbox;
     private DatabaseHandler db;
 
+    //Marker
+    private GoogleMap mMap = null;
+    private Marker mSelectedMarker;
+
     // These are the options for polyline caps, joints and patterns. We use their
     // string resource IDs as identifiers.
 
@@ -137,6 +146,7 @@ public class MapsActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
 
         db = new DatabaseHandler(this);
 
@@ -176,7 +186,10 @@ public class MapsActivity extends AppCompatActivity
 
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+             new OnMapAndViewReadyListener(mapFragment, this);
+
         mapFragment.getMapAsync(this);
+
     }
 
     private String[] getResourceStrings(int[] resourceIds) {
@@ -262,6 +275,13 @@ public class MapsActivity extends AppCompatActivity
 
 
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latList.get(0),lonList.get(0)), 3));
+        mMap = map;
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                mSelectedMarker = null;
+            }
+        });
 
         // Add a listener for polyline clicks that changes the clicked polyline's color.
         map.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
@@ -269,17 +289,60 @@ public class MapsActivity extends AppCompatActivity
             public void onPolylineClick(Polyline polyline) {
                 // Flip the values of the red, green and blue components of the polyline's color.
               //  polyline.setColor(polyline.getColor() ^ 0x00ffffff);
-                double latitude=polyline.getPoints().get(0).latitude;
-                double longitude= polyline.getPoints().get(0).longitude;
+                double latitude1=polyline.getPoints().get(0).latitude;
+                double longitude1= polyline.getPoints().get(0).longitude;
+				double latitude2=polyline.getPoints().get(0).latitude;
+				double longitude2= polyline.getPoints().get(0).longitude;
 
 
-                Toast.makeText(MapsActivity.this, "Speed: "+db.getSpeed(latitude,longitude), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "Speed: "+db.getSpeed(latitude1,longitude1), Toast.LENGTH_SHORT).show();
+
+                addMarkersToMap(latitude1,longitude1,latitude2,longitude2);
+                mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker marker) {
+                        if (marker.equals(mSelectedMarker)) {
+                            // The showing info window has already been closed - that's the first thing to happen
+                            // when any marker is clicked.
+                            // Return true to indicate we have consumed the event and that we do not want the
+                            // the default behavior to occur (which is for the camera to move such that the
+                            // marker is centered and for the marker's info window to open, if it has one).
+                            mSelectedMarker = null;
+                            return true;
+                        }
+
+                        mSelectedMarker = marker;
+
+                        // Return false to indicate that we have not consumed the event and that we wish
+                        // for the default behavior to occur.
+                        return false;
+                    }
+                });
 
 
 
             }
         });
+        LatLngBounds bounds = new LatLngBounds.Builder()
+                                      .include(new LatLng(latList.get(0),lonList.get(0)))
+                                      .build();
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+
+
     }
+
+
+    public void addMarkersToMap(Double latitude1,Double longitude1,Double latitude2,Double longitude2){
+		Float v1 =db.getSpeed(latitude1,longitude1);
+		Float v2 =db.getSpeed(latitude2,longitude2);
+
+		mMap.addMarker(new MarkerOptions()
+                               .position(new LatLng(latitude1,longitude1))
+                               .title("Point")
+                               .snippet("Speed: "+db.getSpeed(latitude1,longitude1)+"\n"+
+								"Acceseration:" +"0"));
+    }
+
 
     private Cap getSelectedCap(int pos) {
         switch (CAP_TYPE_NAME_RESOURCE_IDS[pos]) {
@@ -386,4 +449,9 @@ public class MapsActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+
+        return false;
+    }
 }
