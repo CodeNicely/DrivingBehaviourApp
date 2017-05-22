@@ -138,7 +138,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
-                speed=Float.parseFloat(cursor.getString(3));
+                speed=Float.parseFloat(cursor.getString(4));
 //                locationData.setSpeed(Float.parseFloat(cursor.getString(3)));
 
                 // Adding contact to list
@@ -148,5 +148,29 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         // return contact list
         return speed;
     }
+	public Long getTime(double latitude, double longitude) {
+
+		// Select All Query
+		Long time= Long.valueOf(100);
+		String selectQuery = "SELECT  * FROM " + TABLE_TRIPS + " WHERE "+
+									 KEY_LATITUDE+"="+String.valueOf(latitude)+" AND " +
+									 KEY_LONGITUDE+"="+String.valueOf(longitude);
+
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+
+		// looping through all rows and adding to list
+		if (cursor.moveToFirst()) {
+			do {
+				time= Long.parseLong(cursor.getString(1));
+//                locationData.setSpeed(Float.parseFloat(cursor.getString(3)));
+
+				// Adding contact to list
+			} while (cursor.moveToNext());
+		}
+
+		// return time list
+		return time;
+	}
 
 }

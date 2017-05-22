@@ -336,15 +336,20 @@ public class MapsActivity extends AppCompatActivity
 		Float v1 =db.getSpeed(latitude1,longitude1);
 		Float v2 =db.getSpeed(latitude2,longitude2);
 
-		mMap.addMarker(new MarkerOptions()
+        Long time1 =db.getTime(latitude1,longitude1);
+        Long time2 =db.getTime(latitude2,longitude2);
+
+        Float acceleration =(v2-v1)/(time2-time1);
+        mMap.addMarker(new MarkerOptions()
                                .position(new LatLng(latitude1,longitude1))
                                .title("Point")
-                               .snippet("Speed: "+db.getSpeed(latitude1,longitude1)+"\n"+
-								"Acceseration:" +"0"));
+                               .snippet("Speed: "+db.getSpeed(latitude1,longitude1)+"km/hr"+"\n"+
+								"Acceseration:" +acceleration+"m/s^2"));
     }
 
 
     private Cap getSelectedCap(int pos) {
+
         switch (CAP_TYPE_NAME_RESOURCE_IDS[pos]) {
             case R.string.cap_butt:
                 return new ButtCap();
