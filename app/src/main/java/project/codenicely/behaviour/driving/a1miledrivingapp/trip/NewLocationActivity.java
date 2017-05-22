@@ -25,11 +25,14 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.List;
 
 import project.codenicely.behaviour.driving.a1miledrivingapp.MapsActivity;
 import project.codenicely.behaviour.driving.a1miledrivingapp.R;
 import project.codenicely.behaviour.driving.a1miledrivingapp.helper.LocationService;
+import project.codenicely.behaviour.driving.a1miledrivingapp.helper.SharedPrefs;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.models.LocationData;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.DatabaseHandler;
 
@@ -49,10 +52,10 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
     private GoogleApiClient mGoogleApiClient;
 
     // boolean flag to toggle periodic location updates
-    private boolean mRequestingLocationUpdates = false;
+//    private boolean mRequestingLocationUpdates = false;
 
     private LocationRequest mLocationRequest;
-
+    private SharedPrefs sharedPrefs;
     // Location updates intervals in sec
     private static int UPDATE_INTERVAL = 10000; // 10 sec
     private static int FATEST_INTERVAL = 5000; // 5 sec
@@ -70,17 +73,14 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_location);
-
-        int a=1;
-        int b=1;
-
-            startService(new Intent(this, LocationService.class));
-
+        startService(new Intent(this, LocationService.class));
 
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
         btnStartLocationUpdates = (Button) findViewById(R.id.btnLocationUpdates);
         locationListTextView = (TextView) findViewById(R.id.locationList);
+
+        sharedPrefs = new SharedPrefs(this);
 
 
         db = new DatabaseHandler(this);
@@ -112,6 +112,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
             }
         });
 
+
     }
 
     @Override
@@ -129,8 +130,25 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         checkPlayServices();
 
         // Resuming the periodic location updates
-        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
+        /*if (mGoogleApiClient.isConnected() && sharedPrefs.isTripOngoing()) {
             startLocationUpdates();
+            btnStartLocationUpdates
+                    .setText(getString(R.string.btn_stop_location_updates));
+
+        }*/
+
+        if (mGoogleApiClient.isConnected()) {
+            if (sharedPrefs.isTripOngoing()) {
+                btnStartLocationUpdates
+                        .setText(getString(R.string.btn_stop_location_updates));
+                startService(new Intent(this, LocationService.class));
+
+                startLocationUpdates();
+            } else {
+                btnStartLocationUpdates
+                        .setText(getString(R.string.btn_start_location_updates));
+                stopLocationUpdates();
+            }
         }
     }
 
@@ -183,31 +201,41 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
      * Method to toggle periodic location updates
      */
     private void togglePeriodicLocationUpdates() {
-        if (!mRequestingLocationUpdates) {
-            // Changing the button text
-            btnStartLocationUpdates
-                    .setText(getString(R.string.btn_stop_location_updates));
-
-            mRequestingLocationUpdates = true;
-
-            // Starting the location updates
-            startLocationUpdates();
-
-            Log.d(TAG, "Periodic location updates started!");
-
-        } else {
+        if (sharedPrefs.isTripOngoing()) {
             // Changing the button text
             btnStartLocationUpdates
                     .setText(getString(R.string.btn_start_location_updates));
 
-            mRequestingLocationUpdates = false;
+            sharedPrefs.setTripOngoing(false);
 
-            // Stopping the location updates
+            // Starting the location updates
             stopLocationUpdates();
 
             Log.d(TAG, "Periodic location updates stopped!");
             Intent intent = new Intent(this, MapsActivity.class);
             startActivity(intent);
+        } else {
+            // Changing the button text
+            btnStartLocationUpdates
+                    .setText(getString(R.string.btn_stop_location_updates));
+
+            sharedPrefs.setTripOngoing(true);
+            EventBus.getDefault().post(new LocationService.MessageEvent(true));
+
+
+            List<LocationData> locationDataList = db.getAllLocationPoints();
+
+            for (LocationData locationPoint : locationDataList) {
+
+                db.deleteLocationPoint(locationPoint);
+
+            }
+
+            // Stopping the location updates
+            startLocationUpdates();
+
+            Log.d(TAG, "Periodic location updates started!");
+
 
         }
     }
@@ -296,11 +324,14 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
 
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
 
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    Manifest.permission.ACCESS_COARSE_LOCATION ) || ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION )) {
 
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
@@ -314,7 +345,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
                                 //Prompt the user once explanation has been shown
                                 ActivityCompat.requestPermissions(NewLocationActivity.this,
                                         new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                                Manifest.permission.ACCESS_COARSE_LOCATION},
+                                        Manifest.permission.ACCESS_COARSE_LOCATION},
                                         MY_PERMISSIONS_REQUEST_LOCATION);
                             }
                         })
@@ -334,9 +365,22 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         // Once connected with google api, get the location
         displayLocation();
 
-        if (mRequestingLocationUpdates) {
+        if (sharedPrefs.isTripOngoing()) {
             startLocationUpdates();
+            btnStartLocationUpdates
+                    .setText(getString(R.string.btn_stop_location_updates));
+            startService(new Intent(this, LocationService.class));
+
+        } else {
+            btnStartLocationUpdates
+                    .setText(getString(R.string.btn_start_location_updates));
+            stopLocationUpdates();
+
         }
+
+/*        if (mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }*/
     }
 
     @Override
@@ -349,38 +393,24 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         // Assign the new location
         mLastLocation = location;
 
-        Toast.makeText(getApplicationContext(), "Location changed!",
-                Toast.LENGTH_SHORT).show();
-        LocationData locationData = new LocationData(
-                1,
-                System.currentTimeMillis()/1000,
-                location.getLatitude(),
-                location.getLongitude(),
-                location.getSpeed()
-        );
-
-
-
-//        Toast.makeText(this, ""+location.getSpeed(), Toast.LENGTH_SHORT).show();
-//        db.addLocation(locationData);
 
         // Displaying the new location on UI
         displayLocation();
 
+        if (sharedPrefs.isTripOngoing()) {
+            List<LocationData> locationDataList = db.getAllLocationPoints();
+            locationListTextView.setText("Trip_ID - Timestamp - Latitude - Longitude - Speed");
 
-        List<LocationData> locationDataList = db.getAllLocationPoints();
-        locationListTextView.setText("Trip_ID - Timestamp - Latitude - Longitude - Speed");
+            for (LocationData locationPoint : locationDataList) {
+                locationListTextView.append("\n\n - " + locationPoint.getTrip_id() +
+                        " - " + locationPoint.getTimestamp() +
+                        " - " + locationPoint.getLatitude() +
+                        " - " + locationPoint.getLongitude() +
+                        " - " + locationPoint.getSpeed()
+                );
 
-        for (LocationData locationPoint : locationDataList) {
-            locationListTextView.append("\n\n - " + locationPoint.getTrip_id() +
-                    " - " + locationPoint.getTimestamp() +
-                    " - " + locationPoint.getLatitude() +
-                    " - " + locationPoint.getLongitude() +
-                    " - " + locationPoint.getSpeed()
-            );
-
+            }
         }
-
 
     }
 
@@ -398,6 +428,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
                     if (ContextCompat.checkSelfPermission(this,
                             android.Manifest.permission.ACCESS_FINE_LOCATION)
                             == PackageManager.PERMISSION_GRANTED) {
+
 
                         //Request location updates:
                     }

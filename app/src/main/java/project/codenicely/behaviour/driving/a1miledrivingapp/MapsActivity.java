@@ -28,6 +28,7 @@ import android.widget.CheckBox;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -54,9 +55,9 @@ import com.google.android.gms.maps.model.SquareCap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
+import project.codenicely.behaviour.driving.a1miledrivingapp.helper.SharedPrefs;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.models.LocationData;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.DatabaseHandler;
 
@@ -65,8 +66,8 @@ import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.Databas
  */
 public class MapsActivity extends AppCompatActivity
         implements OnSeekBarChangeListener, OnItemSelectedListener,
-                           OnMapReadyCallback ,GoogleMap.OnMarkerClickListener,
-                           OnMapAndViewReadyListener.OnGlobalLayoutAndMapReadyListener {
+        OnMapReadyCallback, GoogleMap.OnMarkerClickListener,
+        OnMapAndViewReadyListener.OnGlobalLayoutAndMapReadyListener {
 
     // City locations for mutable polyline.
    /* private static final LatLng ADELAIDE = new LatLng(-34.92873, 138.59995);
@@ -114,11 +115,11 @@ public class MapsActivity extends AppCompatActivity
     private Spinner mPatternSpinner;
     private CheckBox mClickabilityCheckbox;
     private DatabaseHandler db;
-
+    private TextView distractedTimeTextview;
     //Marker
     private GoogleMap mMap = null;
     private Marker mSelectedMarker;
-
+    private SharedPrefs sharedPrefs;
     // These are the options for polyline caps, joints and patterns. We use their
     // string resource IDs as identifiers.
 
@@ -147,8 +148,23 @@ public class MapsActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        sharedPrefs = new SharedPrefs(this);
 
         db = new DatabaseHandler(this);
+
+        distractedTimeTextview = (TextView) findViewById(R.id.distracted_time);
+        distractedTimeTextview.setText("DistractedTime: " +
+                String.valueOf(sharedPrefs.getDistractedTime()) + " Seconds");
+
+        LocationData firstLocation = db.getAllLocationPoints().get(0);
+        LocationData lastLocation = db.getAllLocationPoints().get(db.getAllLocationPoints().size() - 1);
+
+        long travel_time = lastLocation.getTimestamp() - firstLocation.getTimestamp();
+
+
+        distractedTimeTextview.append("\n\nTotal Trip time: " +
+                String.valueOf(travel_time) + " Seconds");
+
 
         mHueBar = (SeekBar) findViewById(R.id.hueSeekBar);
         mHueBar.setMax(MAX_HUE_DEGREES);
@@ -186,7 +202,7 @@ public class MapsActivity extends AppCompatActivity
 
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-             new OnMapAndViewReadyListener(mapFragment, this);
+        new OnMapAndViewReadyListener(mapFragment, this);
 
         mapFragment.getMapAsync(this);
 
@@ -225,9 +241,9 @@ public class MapsActivity extends AppCompatActivity
 
         List<LocationData> locationDataList = db.getAllLocationPoints();
         for (LocationData locationPoint : locationDataList) {
-            v1.add(locationPoint.getTrip_id()) ;
-            latList.add(locationPoint.getLatitude()) ;
-            lonList.add(locationPoint.getLongitude()) ;
+            v1.add(locationPoint.getTrip_id());
+            latList.add(locationPoint.getLatitude());
+            lonList.add(locationPoint.getLongitude());
             v4.add(locationPoint.getSpeed());
         }
 
@@ -247,13 +263,13 @@ public class MapsActivity extends AppCompatActivity
               .addAll(var1)
             );
 */
-        for (int i=0; i < (latList.size() -1);i++) {
+        for (int i = 0; i < (latList.size() - 1); i++) {
             mMutablePolyline = map.addPolyline(new PolylineOptions()
-               .color(color)
-               .width(mWidthBar.getProgress())
-               .clickable(mClickabilityCheckbox.isChecked())
+                    .color(color)
+                    .width(mWidthBar.getProgress())
+                    .clickable(mClickabilityCheckbox.isChecked())
 
-               .add(new LatLng(latList.get(i), lonList.get(i)),new LatLng(latList.get(i+1),lonList.get(i+1))));
+                    .add(new LatLng(latList.get(i), lonList.get(i)), new LatLng(latList.get(i + 1), lonList.get(i + 1))));
             Log.d("Latitude --------", String.valueOf(latList.get(i)));
         }
 
@@ -274,7 +290,7 @@ public class MapsActivity extends AppCompatActivity
         // Move the map so that it is centered on the mutable polyline.
 
 
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latList.get(0),lonList.get(0)), 3));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latList.get(0), lonList.get(0)), 3));
         mMap = map;
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -288,16 +304,23 @@ public class MapsActivity extends AppCompatActivity
             @Override
             public void onPolylineClick(Polyline polyline) {
                 // Flip the values of the red, green and blue components of the polyline's color.
-              //  polyline.setColor(polyline.getColor() ^ 0x00ffffff);
-                double latitude1=polyline.getPoints().get(0).latitude;
-                double longitude1= polyline.getPoints().get(0).longitude;
-				double latitude2=polyline.getPoints().get(0).latitude;
-				double longitude2= polyline.getPoints().get(0).longitude;
+                //  polyline.setColor(polyline.getColor() ^ 0x00ffffff);
+                double latitude1 = polyline.getPoints().get(0).latitude;
+                double longitude1 = polyline.getPoints().get(0).longitude;
+                double latitude2 = polyline.getPoints().get(0).latitude;
+                double longitude2 = polyline.getPoints().get(0).longitude;
 
 
-                Toast.makeText(MapsActivity.this, "Speed: "+db.getSpeed(latitude1,longitude1), Toast.LENGTH_SHORT).show();
+                Float v1 = db.getSpeed(latitude1, longitude1);
+                Float v2 = db.getSpeed(latitude2, longitude2);
 
-                addMarkersToMap(latitude1,longitude1,latitude2,longitude2);
+                Long time1 = db.getTime(latitude1, longitude1);
+                Long time2 = db.getTime(latitude2, longitude2);
+
+                Float acceleration = (v2 - v1) / (time2 - time1);
+                Toast.makeText(MapsActivity.this, "Speed: " + db.getSpeed(latitude1, longitude1) + "\n Acceleration:" + String.valueOf(acceleration), Toast.LENGTH_SHORT).show();
+
+                addMarkersToMap(latitude1, longitude1, latitude2, longitude2);
                 mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(Marker marker) {
@@ -320,31 +343,30 @@ public class MapsActivity extends AppCompatActivity
                 });
 
 
-
             }
         });
         LatLngBounds bounds = new LatLngBounds.Builder()
-                                      .include(new LatLng(latList.get(0),lonList.get(0)))
-                                      .build();
+                .include(new LatLng(latList.get(0), lonList.get(0)))
+                .build();
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
 
 
     }
 
 
-    public void addMarkersToMap(Double latitude1,Double longitude1,Double latitude2,Double longitude2){
-		Float v1 =db.getSpeed(latitude1,longitude1);
-		Float v2 =db.getSpeed(latitude2,longitude2);
+    public void addMarkersToMap(Double latitude1, Double longitude1, Double latitude2, Double longitude2) {
+        Float v1 = db.getSpeed(latitude1, longitude1);
+        Float v2 = db.getSpeed(latitude2, longitude2);
 
-        Long time1 =db.getTime(latitude1,longitude1);
-        Long time2 =db.getTime(latitude2,longitude2);
+        Long time1 = db.getTime(latitude1, longitude1);
+        Long time2 = db.getTime(latitude2, longitude2);
 
-        Float acceleration =(v2-v1)/(time2-time1);
+        Float acceleration = (v2 - v1) / (time2 - time1);
         mMap.addMarker(new MarkerOptions()
-                               .position(new LatLng(latitude1,longitude1))
-                               .title("Point")
-                               .snippet("Speed: "+db.getSpeed(latitude1,longitude1)+"km/hr"+"\n"+
-								"Acceseration:" +acceleration+"m/s^2"));
+                .position(new LatLng(latitude1, longitude1))
+                .title("Point")
+                .snippet("Speed: " + db.getSpeed(latitude1, longitude1) + "km/hr" + "\n" +
+                        "Acceseration:" + acceleration + "m/s^2"));
     }
 
 

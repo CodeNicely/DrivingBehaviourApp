@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.renderscript.Float2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,9 +78,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public LocationData getLocationPoint(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = db.query(TABLE_TRIPS, new String[] { KEY_ID,
-                        KEY_LATITUDE, KEY_LONGITUDE,KEY_SPEED }, KEY_ID + "=?",
-                new String[] { String.valueOf(id) }, null, null, null, null);
+        Cursor cursor = db.query(TABLE_TRIPS, new String[]{KEY_ID,
+                        KEY_LATITUDE, KEY_LONGITUDE, KEY_SPEED}, KEY_ID + "=?",
+                new String[]{String.valueOf(id)}, null, null, null, null);
         if (cursor != null)
             cursor.moveToFirst();
 
@@ -127,10 +126,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public float getSpeed(double latitude, double longitude) {
 
         // Select All Query
-        float speed=100;
-        String selectQuery = "SELECT  * FROM " + TABLE_TRIPS + " WHERE "+
-                                     KEY_LATITUDE+"="+String.valueOf(latitude)+" AND " +
-                                     KEY_LONGITUDE+"="+String.valueOf(longitude);
+        float speed = 100;
+        String selectQuery = "SELECT  * FROM " + TABLE_TRIPS + " WHERE " +
+                KEY_LATITUDE + "=" + String.valueOf(latitude) + " AND " +
+                KEY_LONGITUDE + "=" + String.valueOf(longitude);
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -138,7 +137,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
-                speed=Float.parseFloat(cursor.getString(4));
+                speed = Float.parseFloat(cursor.getString(4));
 //                locationData.setSpeed(Float.parseFloat(cursor.getString(3)));
 
                 // Adding contact to list
@@ -148,29 +147,37 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         // return contact list
         return speed;
     }
-	public Long getTime(double latitude, double longitude) {
 
-		// Select All Query
-		Long time= Long.valueOf(100);
-		String selectQuery = "SELECT  * FROM " + TABLE_TRIPS + " WHERE "+
-									 KEY_LATITUDE+"="+String.valueOf(latitude)+" AND " +
-									 KEY_LONGITUDE+"="+String.valueOf(longitude);
+    public Long getTime(double latitude, double longitude) {
 
-		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = db.rawQuery(selectQuery, null);
+        // Select All Query
+        Long time = Long.valueOf(100);
+        String selectQuery = "SELECT  * FROM " + TABLE_TRIPS + " WHERE " +
+                KEY_LATITUDE + "=" + String.valueOf(latitude) + " AND " +
+                KEY_LONGITUDE + "=" + String.valueOf(longitude);
 
-		// looping through all rows and adding to list
-		if (cursor.moveToFirst()) {
-			do {
-				time= Long.parseLong(cursor.getString(1));
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        // looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                time = Long.parseLong(cursor.getString(1));
 //                locationData.setSpeed(Float.parseFloat(cursor.getString(3)));
 
-				// Adding contact to list
-			} while (cursor.moveToNext());
-		}
+                // Adding contact to list
+            } while (cursor.moveToNext());
+        }
 
-		// return time list
-		return time;
-	}
+        // return time list
+        return time;
+    }
+
+    public void deleteLocationPoint(LocationData locationData) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_TRIPS, KEY_ID + " = ?",
+                new String[]{String.valueOf(locationData.getTrip_id())});
+        db.close();
+    }
 
 }

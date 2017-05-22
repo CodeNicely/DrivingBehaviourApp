@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -13,6 +14,13 @@ import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.models.LocationData;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.DatabaseHandler;
@@ -28,21 +36,40 @@ public class LocationService extends Service {
     public LocationManager locationManager;
     public MyLocationListener listener;
     public Location previousBestLocation = null;
+    private SharedPrefs sharedPrefs;
 
     Intent intent;
     int counter = 0;
     private DatabaseHandler db;
+    int delay = 0;
+    int period = 1000;
+    Timer timer;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+
         intent = new Intent(BROADCAST_ACTION);
         db = new DatabaseHandler(this);
+        sharedPrefs = new SharedPrefs(this);
+
+        sharedPrefs.setKeyDistractedTime(0);
+
+        delay = 0; // delay for 5 sec.
+        period = 1000; // repeat every sec.
+
+        timer = new Timer();
 
     }
 
     @Override
     public void onStart(Intent intent, int startId) {
+
+        if(!EventBus.getDefault().isRegistered(this))
+        {
+            EventBus.getDefault().register(this);
+        }
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         listener = new MyLocationListener();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -55,9 +82,13 @@ public class LocationService extends Service {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+        registerReceiver(new PhoneUnlockedReceiver(), new IntentFilter("android.intent.action.USER_PRESENT"));
+        registerReceiver(new PhoneUnlockedReceiver(), new IntentFilter("android.intent.action.SCREEN_OFF"));
+
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 4000, 0, listener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 0, listener);
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -124,6 +155,10 @@ public class LocationService extends Service {
         super.onDestroy();
         Log.v("STOP_SERVICE", "DONE");
         locationManager.removeUpdates(listener);
+
+        if(EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this);
+        }
     }
 
     public static Thread performOnBackgroundThread(final Runnable runnable) {
@@ -147,18 +182,28 @@ public class LocationService extends Service {
         public void onLocationChanged(final Location location) {
 
 
-            Toast.makeText(getApplicationContext(), "Location changed!",
-                    Toast.LENGTH_SHORT).show();
-            LocationData locationData = new LocationData(
-                    1,
-                    System.currentTimeMillis() / 1000,
-                    location.getLatitude(),
-                    location.getLongitude(),
-                    location.getSpeed()
-            );
+            if (sharedPrefs.isTripOngoing()) {
+                Toast.makeText(getApplicationContext(), "Trip Ongoing and Location changed!",
+                        Toast.LENGTH_SHORT).show();
 
-            db.addLocation(locationData);
+                if(location.hasSpeed()){
 
+                }else{
+
+                    Toast.makeText(LocationService.this, "This location has no speed", Toast.LENGTH_SHORT).show();
+
+                }
+
+                LocationData locationData = new LocationData(
+                        1,
+                        System.currentTimeMillis() / 1000,
+                        location.getLatitude(),
+                        location.getLongitude(),
+                        location.getSpeed()
+                );
+                db.addLocation(locationData);
+
+            }
         }
 
         public void onProviderDisabled(String provider) {
@@ -176,4 +221,57 @@ public class LocationService extends Service {
         }
 
     }
+
+    public void startTimer() {
+        timer=new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+
+                System.out.println("Timer started");
+//                Toast.makeText(LocationService.this, "Timer is tunning", Toast.LENGTH_SHORT).show();
+                sharedPrefs.setKeyDistractedTime(sharedPrefs.getDistractedTime() + 1);
+
+            }
+        }, delay, period);
+
+    }
+
+    public void stopTimer() {
+
+//        Toast.makeText(LocationService.this, "Timer cancel", Toast.LENGTH_SHORT).show();
+        System.out.println("Timer stopped");
+
+        timer.cancel();
+
+    }
+
+    public static class MessageEvent {
+
+        private boolean screenStart;
+
+        public MessageEvent(boolean screenStart) {
+            this.screenStart = screenStart;
+        }
+
+        public boolean isScreenStart() {
+            return screenStart;
+        }
+
+        /* Additional fields if needed */
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(MessageEvent event) {
+
+        /* Do something */
+        if (event.isScreenStart()) {
+            startTimer();
+        } else {
+            stopTimer();
+        }
+
+
+    }
+
+    ;
 }
