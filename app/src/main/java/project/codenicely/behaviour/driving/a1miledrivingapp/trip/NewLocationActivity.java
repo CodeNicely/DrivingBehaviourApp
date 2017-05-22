@@ -302,7 +302,9 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
 
         Toast.makeText(getApplicationContext(), "Location changed!",
                 Toast.LENGTH_SHORT).show();
-        LocationData locationData = new LocationData(1,
+        LocationData locationData = new LocationData(
+                1,
+                System.currentTimeMillis(),
                 location.getLatitude(),
                 location.getLongitude(),
                 location.getSpeed()
@@ -316,12 +318,13 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
 
 
         List<LocationData> locationDataList = db.getAllLocationPoints();
-        locationListTextView.setText("Trip_ID - Latitude - Longitude - Speed");
+        locationListTextView.setText("Trip_ID - Timestamp - Latitude - Longitude - Speed");
 
         for (LocationData locationPoint : locationDataList) {
             locationListTextView.append("\n\n - " + locationPoint.getTrip_id() +
+                    " - " + locationPoint.getTimestamp() +
                     " - " + locationPoint.getLatitude() +
-                    " - " + locationPoint.getLongitude()+
+                    " - " + locationPoint.getLongitude() +
                     " - " + locationPoint.getSpeed()
             );
 

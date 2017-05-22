@@ -33,6 +33,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_LATITUDE = "latitude";
     private static final String KEY_LONGITUDE = "longitude";
     private static final String KEY_SPEED = "speed";
+    private static final String KEY_TIMESTAMP = "timestamp";
 
     public DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -43,6 +44,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_TRIPS_TABLE = "CREATE TABLE " + TABLE_TRIPS + "("
                 + KEY_ID + " INTEGER PRIMARY KEY,"
+                + KEY_TIMESTAMP + " TEXT,"
                 + KEY_LATITUDE + " TEXT,"
                 + KEY_LONGITUDE + " TEXT,"
                 + KEY_SPEED + " TEXT" + ")";
@@ -65,6 +67,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put(KEY_LATITUDE, locationData.getLatitude());
+        values.put(KEY_LATITUDE, locationData.getLatitude());
         values.put(KEY_LONGITUDE, locationData.getLongitude());
         values.put(KEY_SPEED, locationData.getSpeed());
 
@@ -86,9 +89,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         // return contact
         return new LocationData(
                 Integer.parseInt(cursor.getString(0)),
-                Double.parseDouble(cursor.getString(1)),
+                Long.parseLong(cursor.getString(1)),
                 Double.parseDouble(cursor.getString(2)),
-                Float.parseFloat(cursor.getString(2)));
+                Double.parseDouble(cursor.getString(3)),
+                Float.parseFloat(cursor.getString(4)));
     }
 
     public List<LocationData> getAllLocationPoints() {
@@ -105,9 +109,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             do {
                 LocationData locationData = new LocationData();
                 locationData.setTrip_id(Integer.parseInt(cursor.getString(0)));
-                locationData.setLatitude(Double.parseDouble(cursor.getString(1)));
-                locationData.setLongitude(Double.parseDouble(cursor.getString(2)));
-                locationData.setSpeed(Float.parseFloat(cursor.getString(3)));
+                locationData.setTimestamp(Long.parseLong(cursor.getString(1)));
+
+                locationData.setLatitude(Double.parseDouble(cursor.getString(2)));
+                locationData.setLongitude(Double.parseDouble(cursor.getString(3)));
+                locationData.setSpeed(Float.parseFloat(cursor.getString(4)));
 
                 // Adding contact to list
                 locationDataList.add(locationData);
