@@ -220,6 +220,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
                     .setText(getString(R.string.btn_stop_location_updates));
 
             sharedPrefs.setTripOngoing(true);
+            sharedPrefs.setKeyDistractedTime(0);
             EventBus.getDefault().post(new LocationService.MessageEvent(true));
 
 
