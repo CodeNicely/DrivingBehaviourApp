@@ -1,11 +1,15 @@
 package project.codenicely.behaviour.driving.a1miledrivingapp.trip;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -36,6 +40,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
     private static final String TAG = NewLocationActivity.class.getSimpleName();
 
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
     private Location mLastLocation;
 
@@ -282,6 +287,43 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
     @Override
     public void onConnected(Bundle arg0) {
 
+        if (ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.title_location_permission)
+                        .setMessage(R.string.text_location_permission)
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //Prompt the user once explanation has been shown
+                                ActivityCompat.requestPermissions(NewLocationActivity.this,
+                                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION},
+                                        MY_PERMISSIONS_REQUEST_LOCATION);
+                            }
+                        })
+                        .create()
+                        .show();
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_LOCATION);
+            }
+
+        }
         // Once connected with google api, get the location
         displayLocation();
 
@@ -304,11 +346,13 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
                 Toast.LENGTH_SHORT).show();
         LocationData locationData = new LocationData(
                 1,
-                System.currentTimeMillis(),
+                System.currentTimeMillis()/1000,
                 location.getLatitude(),
                 location.getLongitude(),
                 location.getSpeed()
         );
+
+
 
 //        Toast.makeText(this, ""+location.getSpeed(), Toast.LENGTH_SHORT).show();
         db.addLocation(locationData);
@@ -332,5 +376,43 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
 
 
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // location-related task you need to do.
+                    if (ContextCompat.checkSelfPermission(this,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+
+                        //Request location updates:
+                    }
+
+                    if (ContextCompat.checkSelfPermission(this,
+                            Manifest.permission.ACCESS_COARSE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+
+                        //Request location updates:
+                    }
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(this, "No permission!", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+
+        }
+    }
+
 
 }

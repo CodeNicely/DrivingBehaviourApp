@@ -66,7 +66,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(KEY_LATITUDE, locationData.getLatitude());
+        values.put(KEY_TIMESTAMP, locationData.getTimestamp());
         values.put(KEY_LATITUDE, locationData.getLatitude());
         values.put(KEY_LONGITUDE, locationData.getLongitude());
         values.put(KEY_SPEED, locationData.getSpeed());
@@ -110,7 +110,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 LocationData locationData = new LocationData();
                 locationData.setTrip_id(Integer.parseInt(cursor.getString(0)));
                 locationData.setTimestamp(Long.parseLong(cursor.getString(1)));
-
                 locationData.setLatitude(Double.parseDouble(cursor.getString(2)));
                 locationData.setLongitude(Double.parseDouble(cursor.getString(3)));
                 locationData.setSpeed(Float.parseFloat(cursor.getString(4)));
