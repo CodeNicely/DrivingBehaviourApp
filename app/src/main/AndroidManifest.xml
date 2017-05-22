@@ -41,6 +41,8 @@
             android:name=".MapsActivity"
             android:label="@string/polyline_demo_label"/>
 
+        <service android:name=".helper.LocationService"/>
+
     </application>
 
 </manifest>

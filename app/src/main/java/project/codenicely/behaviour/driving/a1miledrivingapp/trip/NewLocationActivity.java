@@ -29,6 +29,7 @@ import java.util.List;
 
 import project.codenicely.behaviour.driving.a1miledrivingapp.MapsActivity;
 import project.codenicely.behaviour.driving.a1miledrivingapp.R;
+import project.codenicely.behaviour.driving.a1miledrivingapp.helper.LocationService;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.models.LocationData;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.DatabaseHandler;
 
@@ -69,6 +70,12 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_location);
+
+        int a=1;
+        int b=1;
+
+            startService(new Intent(this, LocationService.class));
+
 
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
@@ -355,7 +362,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
 
 
 //        Toast.makeText(this, ""+location.getSpeed(), Toast.LENGTH_SHORT).show();
-        db.addLocation(locationData);
+//        db.addLocation(locationData);
 
         // Displaying the new location on UI
         displayLocation();
