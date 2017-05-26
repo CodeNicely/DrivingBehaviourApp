@@ -209,12 +209,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
 
-    public float getSpeed(double latitude, double longitude) {
+    public float getSpeed(long journey_id,double latitude, double longitude) {
 
         // Select All Query
         float speed = 100;
         String selectQuery = "SELECT  * FROM " + TABLE_LOCATION_POINTS + " WHERE " +
                 KEY_LATITUDE + "=" + String.valueOf(latitude) + " AND " +
+                KEY_JOURNEY_ID + "=" + journey_id + " AND " +
                 KEY_LONGITUDE + "=" + String.valueOf(longitude);
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -234,12 +235,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return speed;
     }
 
-    public Long getTime(double latitude, double longitude) {
+    public Long getTime(long journey_id,double latitude, double longitude) {
 
         // Select All Query
-        Long time = Long.valueOf(100);
+        Long time = null;
         String selectQuery = "SELECT  * FROM " + TABLE_LOCATION_POINTS + " WHERE " +
                 KEY_LATITUDE + "=" + String.valueOf(latitude) + " AND " +
+                KEY_JOURNEY_ID + "=" + journey_id + " AND " +
                 KEY_LONGITUDE + "=" + String.valueOf(longitude);
 
         SQLiteDatabase db = this.getWritableDatabase();

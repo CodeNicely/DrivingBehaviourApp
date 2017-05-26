@@ -120,7 +120,7 @@ public class MapsActivity extends AppCompatActivity
     //Marker
     private GoogleMap mMap = null;
     private Marker mSelectedMarker;
-    private SharedPrefs sharedPrefs;
+//    private SharedPrefs sharedPrefs;
     // These are the options for polyline caps, joints and patterns. We use their
     // string resource IDs as identifiers.
     private long journey_id=-1;
@@ -165,7 +165,7 @@ public class MapsActivity extends AppCompatActivity
             return;
         }
 
-        sharedPrefs = new SharedPrefs(this);
+//        sharedPrefs = new SharedPrefs(this);
 
         db = new DatabaseHandler(this);
 
@@ -228,28 +228,28 @@ public class MapsActivity extends AppCompatActivity
         map.setContentDescription(getString(R.string.polyline_demo_description));
 
         // A geodesic polyline that goes around the world.
-        map.addPolyline(new PolylineOptions()
+/*        map.addPolyline(new PolylineOptions()
                 .add(LHR, AKL, LAX, JFK, LHR)
                 .width(INITIAL_STROKE_WIDTH_PX)
                 .color(Color.BLUE)
                 .geodesic(true)
-                .clickable(mClickabilityCheckbox.isChecked()));
+                .clickable(mClickabilityCheckbox.isChecked()));*/
 
         // A simple polyline across Australia. This polyline will be mutable.
-        int color = Color.HSVToColor(
-                mAlphaBar.getProgress(), new float[]{mHueBar.getProgress(), 1, 1});
+/*        int color = Color.HSVToColor(
+                mAlphaBar.getProgress(), new float[]{mHueBar.getProgress(), 1, 1});*/
 
 //        ArrayList<Integer> v1 = new ArrayList<>();
         ArrayList<Double> latList = new ArrayList<>();
         ArrayList<Double> lonList = new ArrayList<>();
-//        ArrayList<Float> v4 = new ArrayList<>();
+        ArrayList<Float> speedList = new ArrayList<>();
 
         List<LocationData> locationDataList = db.getAllLocationPoints(journey_id);
         for (LocationData locationPoint : locationDataList) {
 //            v1.add(locationPoint.getLocation_id());
             latList.add(locationPoint.getLatitude());
             lonList.add(locationPoint.getLongitude());
-//            v4.add(locationPoint.getSpeed());
+            speedList.add(locationPoint.getSpeed());
         }
 
       /*  Iterable<LatLng> var1= new Iterable<LatLng>() {
@@ -273,7 +273,31 @@ public class MapsActivity extends AppCompatActivity
           Toast.makeText(this, "This journey has only 1 point", Toast.LENGTH_SHORT).show();
           return;
       }
+        map.addPolyline(new PolylineOptions()
+                .add(LHR, AKL, LAX, JFK, LHR)
+                .width(INITIAL_STROKE_WIDTH_PX)
+                .color(Color.BLUE)
+                .geodesic(true)
+                .clickable(mClickabilityCheckbox.isChecked()));
+
+/*
+        int color = Color.HSVToColor(
+                mAlphaBar.getProgress(), new float[]{mHueBar.getProgress(), 1, 1});
+*/
+
         for (int i = 0; i < (latList.size() - 1); i++) {
+
+            int color=Color.BLACK;
+
+            if(speedList.get(i)<50){
+                color=Color.GREEN;
+            }else if(speedList.get(i)>50 && speedList.get(i)<70){
+                color = Color.YELLOW;
+            }else{
+                color = Color.RED;
+            }
+
+
             mMutablePolyline = map.addPolyline(new PolylineOptions()
                     .color(color)
                     .width(mWidthBar.getProgress())
@@ -316,18 +340,18 @@ public class MapsActivity extends AppCompatActivity
                 //  polyline.setColor(polyline.getColor() ^ 0x00ffffff);
                 double latitude1 = polyline.getPoints().get(0).latitude;
                 double longitude1 = polyline.getPoints().get(0).longitude;
-                double latitude2 = polyline.getPoints().get(0).latitude;
-                double longitude2 = polyline.getPoints().get(0).longitude;
+                double latitude2 = polyline.getPoints().get(1).latitude;
+                double longitude2 = polyline.getPoints().get(1).longitude;
 
 
-                Float v1 = db.getSpeed(latitude1, longitude1);
-                Float v2 = db.getSpeed(latitude2, longitude2);
+                Float v1 = db.getSpeed(journey_id,latitude1, longitude1);
+                Float v2 = db.getSpeed(journey_id,latitude2, longitude2);
 
-                Long time1 = db.getTime(latitude1, longitude1);
-                Long time2 = db.getTime(latitude2, longitude2);
+                Long time1 = db.getTime(journey_id,latitude1, longitude1);
+                Long time2 = db.getTime(journey_id,latitude2, longitude2);
 
                 Float acceleration = (v2 - v1) / (time2 - time1);
-                Toast.makeText(MapsActivity.this, "Speed: " + db.getSpeed(latitude1, longitude1) + "\n Acceleration:" + String.valueOf(acceleration), Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "Speed: " + db.getSpeed(journey_id,latitude1, longitude1) + "\n Acceleration:" + String.valueOf(acceleration), Toast.LENGTH_SHORT).show();
 
                 addMarkersToMap(latitude1, longitude1, latitude2, longitude2);
                 mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
@@ -364,17 +388,17 @@ public class MapsActivity extends AppCompatActivity
 
 
     public void addMarkersToMap(Double latitude1, Double longitude1, Double latitude2, Double longitude2) {
-        Float v1 = db.getSpeed(latitude1, longitude1);
-        Float v2 = db.getSpeed(latitude2, longitude2);
+        Float v1 = db.getSpeed(journey_id,latitude1, longitude1);
+        Float v2 = db.getSpeed(journey_id,latitude2, longitude2);
 
-        Long time1 = db.getTime(latitude1, longitude1);
-        Long time2 = db.getTime(latitude2, longitude2);
+        Long time1 = db.getTime(journey_id,latitude1, longitude1);
+        Long time2 = db.getTime(journey_id,latitude2, longitude2);
 
         Float acceleration = (v2 - v1) / (time2 - time1);
         mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(latitude1, longitude1))
                 .title("Point")
-                .snippet("Speed: " + db.getSpeed(latitude1, longitude1) + "km/hr" + "\n" +
+                .snippet("Speed: " + db.getSpeed(journey_id,latitude1, longitude1) + "km/hr" + "\n" +
                         "Acceseration:" + acceleration + "m/s^2"));
     }
 
