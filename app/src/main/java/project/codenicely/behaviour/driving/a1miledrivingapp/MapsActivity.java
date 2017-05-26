@@ -57,9 +57,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import project.codenicely.behaviour.driving.a1miledrivingapp.helper.Keys;
 import project.codenicely.behaviour.driving.a1miledrivingapp.helper.SharedPrefs;
-import project.codenicely.behaviour.driving.a1miledrivingapp.trip.models.LocationData;
-import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.DatabaseHandler;
+import project.codenicely.behaviour.driving.a1miledrivingapp.location.models.LocationData;
+import project.codenicely.behaviour.driving.a1miledrivingapp.helper.sqlite.DatabaseHandler;
 
 /**
  * This shows how to draw polylines on a map.
@@ -122,6 +123,7 @@ public class MapsActivity extends AppCompatActivity
     private SharedPrefs sharedPrefs;
     // These are the options for polyline caps, joints and patterns. We use their
     // string resource IDs as identifiers.
+    private long journey_id=-1;
 
     private static final int[] CAP_TYPE_NAME_RESOURCE_IDS = {
             R.string.cap_butt, // Default
@@ -148,23 +150,26 @@ public class MapsActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        if(getIntent()!=null){
+            if(getIntent().getExtras()!=null){
+                journey_id=getIntent().getExtras().getLong(Keys.KEY_JOURNEY_ID);
+
+            }else{
+                Toast.makeText(this, "Return 158", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+        }else{
+            Toast.makeText(this, "Return 163", Toast.LENGTH_SHORT).show();
+
+            return;
+        }
+
         sharedPrefs = new SharedPrefs(this);
 
         db = new DatabaseHandler(this);
 
         distractedTimeTextview = (TextView) findViewById(R.id.distracted_time);
-        distractedTimeTextview.setText("DistractedTime: " +
-                String.valueOf(sharedPrefs.getDistractedTime()) + " Seconds");
-
-        LocationData firstLocation = db.getAllLocationPoints().get(0);
-        LocationData lastLocation = db.getAllLocationPoints().get(db.getAllLocationPoints().size() - 1);
-
-        long travel_time = lastLocation.getTimestamp() - firstLocation.getTimestamp();
-
-
-        distractedTimeTextview.append("\n\nTotal Trip time: " +
-                String.valueOf(travel_time) + " Seconds");
-
 
         mHueBar = (SeekBar) findViewById(R.id.hueSeekBar);
         mHueBar.setMax(MAX_HUE_DEGREES);
@@ -234,17 +239,17 @@ public class MapsActivity extends AppCompatActivity
         int color = Color.HSVToColor(
                 mAlphaBar.getProgress(), new float[]{mHueBar.getProgress(), 1, 1});
 
-        ArrayList<Integer> v1 = new ArrayList<>();
+//        ArrayList<Integer> v1 = new ArrayList<>();
         ArrayList<Double> latList = new ArrayList<>();
         ArrayList<Double> lonList = new ArrayList<>();
-        ArrayList<Float> v4 = new ArrayList<>();
+//        ArrayList<Float> v4 = new ArrayList<>();
 
-        List<LocationData> locationDataList = db.getAllLocationPoints();
+        List<LocationData> locationDataList = db.getAllLocationPoints(journey_id);
         for (LocationData locationPoint : locationDataList) {
-            v1.add(locationPoint.getTrip_id());
+//            v1.add(locationPoint.getLocation_id());
             latList.add(locationPoint.getLatitude());
             lonList.add(locationPoint.getLongitude());
-            v4.add(locationPoint.getSpeed());
+//            v4.add(locationPoint.getSpeed());
         }
 
       /*  Iterable<LatLng> var1= new Iterable<LatLng>() {
@@ -263,12 +268,16 @@ public class MapsActivity extends AppCompatActivity
               .addAll(var1)
             );
 */
+
+      if(latList.size()<=1){
+          Toast.makeText(this, "This journey has only 1 point", Toast.LENGTH_SHORT).show();
+          return;
+      }
         for (int i = 0; i < (latList.size() - 1); i++) {
             mMutablePolyline = map.addPolyline(new PolylineOptions()
                     .color(color)
                     .width(mWidthBar.getProgress())
                     .clickable(mClickabilityCheckbox.isChecked())
-
                     .add(new LatLng(latList.get(i), lonList.get(i)), new LatLng(latList.get(i + 1), lonList.get(i + 1))));
             Log.d("Latitude --------", String.valueOf(latList.get(i)));
         }

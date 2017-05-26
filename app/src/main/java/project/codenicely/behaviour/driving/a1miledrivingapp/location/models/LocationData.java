@@ -1,4 +1,4 @@
-package project.codenicely.behaviour.driving.a1miledrivingapp.trip.models;
+package project.codenicely.behaviour.driving.a1miledrivingapp.location.models;
 
 /**
  * Created by meghal on 21/5/17.
@@ -6,28 +6,33 @@ package project.codenicely.behaviour.driving.a1miledrivingapp.trip.models;
 
 public class LocationData {
 
-    private int trip_id;
+    private int location_id;
+    private long journey_id;
     private long timestamp;
     private double latitude;
     private double longitude;
     private float speed;
 
 
-    public LocationData(int trip_id, long timestamp, double latitude, double longitude, float speed) {
-        this.trip_id = trip_id;
+    public LocationData(int location_id, long journey_id, long timestamp, double latitude, double longitude, float speed) {
+        this.location_id = location_id;
+        this.journey_id = journey_id;
         this.timestamp = timestamp;
         this.latitude = latitude;
         this.longitude = longitude;
         this.speed = speed;
     }
 
-
-    public LocationData() {
+    public LocationData(){
 
     }
 
-    public int getTrip_id() {
-        return trip_id;
+    public int getLocation_id() {
+        return location_id;
+    }
+
+    public long getJourney_id() {
+        return journey_id;
     }
 
     public long getTimestamp() {
@@ -46,8 +51,12 @@ public class LocationData {
         return speed;
     }
 
-    public void setTrip_id(int trip_id) {
-        this.trip_id = trip_id;
+    public void setLocation_id(int location_id) {
+        this.location_id = location_id;
+    }
+
+    public void setJourney_id(int journey_id) {
+        this.journey_id = journey_id;
     }
 
     public void setTimestamp(long timestamp) {

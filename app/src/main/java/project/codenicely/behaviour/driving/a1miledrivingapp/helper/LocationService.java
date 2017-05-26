@@ -19,11 +19,12 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import project.codenicely.behaviour.driving.a1miledrivingapp.trip.models.LocationData;
-import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.DatabaseHandler;
+import project.codenicely.behaviour.driving.a1miledrivingapp.location.models.LocationData;
+import project.codenicely.behaviour.driving.a1miledrivingapp.helper.sqlite.DatabaseHandler;
 
 
 /**
@@ -66,8 +67,7 @@ public class LocationService extends Service {
     @Override
     public void onStart(Intent intent, int startId) {
 
-        if(!EventBus.getDefault().isRegistered(this))
-        {
+        if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -156,7 +156,7 @@ public class LocationService extends Service {
         Log.v("STOP_SERVICE", "DONE");
         locationManager.removeUpdates(listener);
 
-        if(EventBus.getDefault().isRegistered(this)) {
+        if (EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().unregister(this);
         }
     }
@@ -183,25 +183,51 @@ public class LocationService extends Service {
 
 
             if (sharedPrefs.isTripOngoing()) {
-                Toast.makeText(getApplicationContext(), "Trip Ongoing and Location changed!",
-                        Toast.LENGTH_SHORT).show();
 
-                if(location.hasSpeed()){
+                if (location.hasSpeed() && location.getSpeed() > 0.0) {
 
-                }else{
+                    Toast.makeText(LocationService.this, "Location has speed", Toast.LENGTH_SHORT).show();
+                    List<LocationData> locationDataList=db.getAllLocationPoints(sharedPrefs.getCurrentJourneyId());
+                    if (locationDataList.size() > 0) {
+                        LocationData locationDataPrevious = locationDataList.
+                                get(locationDataList.size() - 1);
+
+                        if (locationDataPrevious.getLongitude() == location.getLongitude() &&
+                                locationDataPrevious.getLatitude() == location.getLatitude()) {
+                            // Do nothing
+
+                        } else {
+
+                            LocationData locationData = new LocationData(
+                                    1,
+                                    sharedPrefs.getCurrentJourneyId(),
+                                    System.currentTimeMillis() / 1000,
+                                    location.getLatitude(),
+                                    location.getLongitude(),
+                                    location.getSpeed() * 18 / 5
+                            );
+                            db.addLocation(locationData);
+
+                        }
+                    } else {
+                        LocationData locationData = new LocationData(
+                                1,
+                                sharedPrefs.getCurrentJourneyId(),
+                                System.currentTimeMillis() / 1000,
+                                location.getLatitude(),
+                                location.getLongitude(),
+                                location.getSpeed() * 18 / 5
+                        );
+                        db.addLocation(locationData);
+
+                    }
+
+
+                } else {
 
                     Toast.makeText(LocationService.this, "This location has no speed", Toast.LENGTH_SHORT).show();
 
                 }
-
-                LocationData locationData = new LocationData(
-                        1,
-                        System.currentTimeMillis() / 1000,
-                        location.getLatitude(),
-                        location.getLongitude(),
-                        location.getSpeed()
-                );
-                db.addLocation(locationData);
 
             }
         }
@@ -223,13 +249,27 @@ public class LocationService extends Service {
     }
 
     public void startTimer() {
-        timer=new Timer();
+        timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
 
                 System.out.println("Timer started");
+                System.out.println("Distracted time");
+
 //                Toast.makeText(LocationService.this, "Timer is tunning", Toast.LENGTH_SHORT).show();
-                sharedPrefs.setKeyDistractedTime(sharedPrefs.getDistractedTime() + 1);
+
+                System.out.println("Distracted time: " +
+                        String.valueOf(sharedPrefs.getDistractedTime()));
+                List<LocationData> locationDataList=db.getAllLocationPoints(sharedPrefs.getCurrentJourneyId());
+                if (locationDataList.size() > 0) {
+                    System.out.println("Trip time: " +
+                            String.valueOf((locationDataList.get(locationDataList.size() - 1).getTimestamp() - locationDataList.get(0).getTimestamp())));
+                    sharedPrefs.setKeyDistractedTime(sharedPrefs.getDistractedTime() + 1);
+
+                } else {
+                    sharedPrefs.setKeyDistractedTime(0);
+
+                }
 
             }
         }, delay, period);
@@ -272,6 +312,4 @@ public class LocationService extends Service {
 
 
     }
-
-    ;
 }

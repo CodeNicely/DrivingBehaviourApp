@@ -37,6 +37,18 @@
             android:textSize="16dp" />
 
         <Button
+            android:id="@+id/journeyList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:background="@color/btn_bg"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="@string/journey_list"
+            android:textColor="@color/white" />
+
+
+        <Button
             android:id="@+id/btnShowLocation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -10,7 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
-public class AccelerationActivity extends Activity implements SensorEventListener
+public class UnusedActivity extends Activity implements SensorEventListener
 {
 
     private float[] acceleration = new float[3];

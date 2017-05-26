@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="project.codenicely.behaviour.driving.a1miledrivingapp.AccelerationActivity">
+    tools:context="project.codenicely.behaviour.driving.a1miledrivingapp.UnusedActivity">
 
     <TextView
         android:id="@+id/acceleration"

@@ -2,7 +2,6 @@ package project.codenicely.behaviour.driving.a1miledrivingapp.helper;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 /**
  * Created by meghal on 5/3/17.
@@ -15,8 +14,9 @@ public class SharedPrefs {
     private static final String KEY_USER_ID = "userId";
 
     private static String TAG = "Shared Preference";
-    private static final String KEY_IS_TRIP_ONGOING = "on_going_trip" ;
+    private static final String KEY_IS_TRIP_ONGOING = "on_going_trip";
     private static final String KEY_DISTRACTED_TIME = "time";
+    private static final String KEY_CURRENT_JOURNEY_ID = "current_journey_id";
 
 
     // Shared Preferences
@@ -45,11 +45,11 @@ public class SharedPrefs {
         return pref.getBoolean(KEY_IS_TRIP_ONGOING, false);
     }
 
-    public int getDistractedTime(){
-        return pref.getInt(KEY_DISTRACTED_TIME,0);
+    public int getDistractedTime() {
+        return pref.getInt(KEY_DISTRACTED_TIME, 0);
     }
 
-    public void setKeyDistractedTime(int time){
+    public void setKeyDistractedTime(int time) {
 
         editor.putInt(KEY_DISTRACTED_TIME, time);
         editor.commit();
@@ -57,6 +57,15 @@ public class SharedPrefs {
 
     }
 
+
+    public long getCurrentJourneyId() {
+        return pref.getLong(KEY_CURRENT_JOURNEY_ID, -1);
+    }
+
+    public void setCurrentJourneyId(long id) {
+        editor.putLong(KEY_CURRENT_JOURNEY_ID, id);
+        editor.commit();
+    }
 
     public String getUserId() {
 

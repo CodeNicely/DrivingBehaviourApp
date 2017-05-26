@@ -16,7 +16,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -24,33 +23,31 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-
-        <activity android:name=".AccelerationActivity"></activity>
-        <activity android:name=".trip.NewLocationActivity">
-
+        <activity android:name=".UnusedActivity" />
+        <activity android:name=".location.NewLocationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
         <activity
             android:name=".MapsActivity"
-            android:label="@string/polyline_demo_label"/>
+            android:label="@string/polyline_demo_label" />
 
-        <service android:name=".helper.LocationService"/>
+        <service android:name=".helper.LocationService" />
+
         <receiver android:name=".helper.PhoneUnlockedReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.USER_PRESENT" />
                 <action android:name="android.intent.action.SCREEN_OFF" />
-                <!--<action android:name="android.intent.action." />-->
+                <!-- <action android:name="android.intent.action." /> -->
 
                 <action android:name="android.intent.action.ACTION_SHUTDOWN" />
             </intent-filter>
         </receiver>
 
-
+        <activity android:name=".trip.view.JourneysActivity"></activity>
     </application>
 
 </manifest>

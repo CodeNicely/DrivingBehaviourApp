@@ -1,4 +1,4 @@
-package project.codenicely.behaviour.driving.a1miledrivingapp.trip;
+package project.codenicely.behaviour.driving.a1miledrivingapp.location;
 
 import android.Manifest;
 import android.app.Activity;
@@ -29,12 +29,13 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
-import project.codenicely.behaviour.driving.a1miledrivingapp.MapsActivity;
 import project.codenicely.behaviour.driving.a1miledrivingapp.R;
 import project.codenicely.behaviour.driving.a1miledrivingapp.helper.LocationService;
 import project.codenicely.behaviour.driving.a1miledrivingapp.helper.SharedPrefs;
-import project.codenicely.behaviour.driving.a1miledrivingapp.trip.models.LocationData;
-import project.codenicely.behaviour.driving.a1miledrivingapp.trip.sqlite.DatabaseHandler;
+import project.codenicely.behaviour.driving.a1miledrivingapp.location.models.JourneyData;
+import project.codenicely.behaviour.driving.a1miledrivingapp.location.models.LocationData;
+import project.codenicely.behaviour.driving.a1miledrivingapp.helper.sqlite.DatabaseHandler;
+import project.codenicely.behaviour.driving.a1miledrivingapp.trip.view.JourneysActivity;
 
 
 public class NewLocationActivity extends Activity implements ConnectionCallbacks,
@@ -64,7 +65,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
     // UI elements
     private TextView lblLocation;
     private Button btnShowLocation, btnStartLocationUpdates;
-
+    private Button journeyListButton;
     private DatabaseHandler db;
 
     private TextView locationListTextView;
@@ -78,6 +79,8 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
         btnStartLocationUpdates = (Button) findViewById(R.id.btnLocationUpdates);
+        journeyListButton=(Button)findViewById(R.id.journeyList);
+
         locationListTextView = (TextView) findViewById(R.id.locationList);
 
         sharedPrefs = new SharedPrefs(this);
@@ -112,6 +115,13 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
             }
         });
 
+        journeyListButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(NewLocationActivity.this,JourneysActivity.class);
+                startActivity(intent);
+            }
+        });
 
     }
 
@@ -212,7 +222,15 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
             stopLocationUpdates();
 
             Log.d(TAG, "Periodic location updates stopped!");
-            Intent intent = new Intent(this, MapsActivity.class);
+            List<LocationData> locationDataList = db.getAllLocationPoints(sharedPrefs.getCurrentJourneyId());
+            if(locationDataList.size()>1) {
+                long travel_time = locationDataList.get(locationDataList.size()).getTimestamp() - locationDataList.get(0).getTimestamp();
+
+                db.endJourney(new JourneyData(sharedPrefs.getCurrentJourneyId(), travel_time, sharedPrefs.getDistractedTime(), 0, System.currentTimeMillis()));
+            }
+            sharedPrefs.setCurrentJourneyId(-1);
+
+            Intent intent = new Intent(this, JourneysActivity.class);
             startActivity(intent);
         } else {
             // Changing the button text
@@ -223,8 +241,12 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
             sharedPrefs.setKeyDistractedTime(0);
             EventBus.getDefault().post(new LocationService.MessageEvent(true));
 
+            long id=db.addJourney(System.currentTimeMillis());
+            sharedPrefs.setCurrentJourneyId(id);
 
-            List<LocationData> locationDataList = db.getAllLocationPoints();
+            Toast.makeText(this, "Journey added:"+String.valueOf(id), Toast.LENGTH_SHORT).show();
+
+            List<LocationData> locationDataList = db.getAllLocationPoints(sharedPrefs.getCurrentJourneyId());
 
             for (LocationData locationPoint : locationDataList) {
 
@@ -399,11 +421,12 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         displayLocation();
 
         if (sharedPrefs.isTripOngoing()) {
-            List<LocationData> locationDataList = db.getAllLocationPoints();
+            List<LocationData> locationDataList = db.getAllLocationPoints(sharedPrefs.getCurrentJourneyId());
             locationListTextView.setText("Trip_ID - Timestamp - Latitude - Longitude - Speed");
 
             for (LocationData locationPoint : locationDataList) {
-                locationListTextView.append("\n\n - " + locationPoint.getTrip_id() +
+                locationListTextView.append("\n\n - " +
+                        locationPoint.getJourney_id() +
                         " - " + locationPoint.getTimestamp() +
                         " - " + locationPoint.getLatitude() +
                         " - " + locationPoint.getLongitude() +

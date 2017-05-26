@@ -34,6 +34,12 @@
     <string name="end_cap">End cap</string>
     <string name="joint_type">Joint Type</string>
     <string name="pattern">Pattern</string>
+    <string name="journey_id">Journey Id</string>
+    <string name="end_time">End Time</string>
+    <string name="start_time">Start Time</string>
+    <string name="travel_time">Travel Time</string>
+    <string name="distracted_time">Distracted Time</string>
+    <string name="journey_list">Journey List</string>
 
 
 </resources>
