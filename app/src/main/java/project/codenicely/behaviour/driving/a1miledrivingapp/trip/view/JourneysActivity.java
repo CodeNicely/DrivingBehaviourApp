@@ -45,9 +45,12 @@ public class JourneysActivity extends AppCompatActivity {
         journeyAdapter.notifyDataSetChanged();
     }
 
-    public void openMapsActivity(long journey_id) {
+    public void openMapsActivity(long journey_id, long travel_time, long distracted_time) {
         Intent intent = new Intent(this, MapsActivity.class);
         intent.putExtra(Keys.KEY_JOURNEY_ID, journey_id);
+        intent.putExtra(Keys.KEY_TRAVEL_TIME, travel_time);
+        intent.putExtra(Keys.KEY_DISTRACTED_TIME, distracted_time);
+
         startActivity(intent);
     }
 

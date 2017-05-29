@@ -51,21 +51,19 @@ public class JourneyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 journey_id_textview.setText("Journey Id: "+String.valueOf(journeyData.getJourney_id()));
 
         ((JourneyViewHolder) holder).travel_time_textview.setText("Travel Time: "+String.valueOf(journeyData.getTravel_time()));
-
-
         ((JourneyViewHolder) holder).distracted_time_textview.setText("Distracted Time: "+String.valueOf(journeyData.getDistracted_time()));
-
-
         ((JourneyViewHolder) holder).journey_card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(context instanceof JourneysActivity){
-                    ((JourneysActivity)context).openMapsActivity(journeyDataList.get(position).getJourney_id());
+                    ((JourneysActivity)context).openMapsActivity(
+                            journeyDataList.get(position).getJourney_id(),
+                            journeyDataList.get(position).getTravel_time(),
+                            journeyDataList.get(position).getDistracted_time()
+                            );
                 }
             }
         });
-
-
     }
 
     @Override

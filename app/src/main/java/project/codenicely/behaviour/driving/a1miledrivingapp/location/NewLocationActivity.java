@@ -32,9 +32,9 @@ import java.util.List;
 import project.codenicely.behaviour.driving.a1miledrivingapp.R;
 import project.codenicely.behaviour.driving.a1miledrivingapp.helper.LocationService;
 import project.codenicely.behaviour.driving.a1miledrivingapp.helper.SharedPrefs;
+import project.codenicely.behaviour.driving.a1miledrivingapp.helper.sqlite.DatabaseHandler;
 import project.codenicely.behaviour.driving.a1miledrivingapp.location.models.JourneyData;
 import project.codenicely.behaviour.driving.a1miledrivingapp.location.models.LocationData;
-import project.codenicely.behaviour.driving.a1miledrivingapp.helper.sqlite.DatabaseHandler;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.view.JourneysActivity;
 
 
@@ -79,7 +79,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
         btnStartLocationUpdates = (Button) findViewById(R.id.btnLocationUpdates);
-        journeyListButton=(Button)findViewById(R.id.journeyList);
+        journeyListButton = (Button) findViewById(R.id.journeyList);
 
         locationListTextView = (TextView) findViewById(R.id.locationList);
 
@@ -118,7 +118,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         journeyListButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent=new Intent(NewLocationActivity.this,JourneysActivity.class);
+                Intent intent = new Intent(NewLocationActivity.this, JourneysActivity.class);
                 startActivity(intent);
             }
         });
@@ -213,23 +213,33 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
     private void togglePeriodicLocationUpdates() {
         if (sharedPrefs.isTripOngoing()) {
             // Changing the button text
+
+            List<LocationData> locationDataList = db.getAllLocationPoints(sharedPrefs.getCurrentJourneyId());
+
+
+            if (locationDataList.size() > 1) {
+                long travel_time = locationDataList.get(locationDataList.size() - 1).getTimestamp() - locationDataList.get(0).getTimestamp();
+
+                db.endJourney(new JourneyData(sharedPrefs.getCurrentJourneyId(), travel_time, sharedPrefs.getDistractedTime(), 0, System.currentTimeMillis()));
+                Toast.makeText(this, "Travel Time: " + String.valueOf(travel_time) +
+                                "\nDistracted Time: " + String.valueOf(sharedPrefs.getDistractedTime()) +
+                                "\nEnd Time: " + String.valueOf(System.currentTimeMillis())
+                        , Toast.LENGTH_SHORT).show();
+            }
+
+
             btnStartLocationUpdates
                     .setText(getString(R.string.btn_start_location_updates));
 
             sharedPrefs.setTripOngoing(false);
 
             // Starting the location updates
-            stopLocationUpdates();
+
 
             Log.d(TAG, "Periodic location updates stopped!");
-            List<LocationData> locationDataList = db.getAllLocationPoints(sharedPrefs.getCurrentJourneyId());
-            if(locationDataList.size()>1) {
-                long travel_time = locationDataList.get(locationDataList.size()).getTimestamp() - locationDataList.get(0).getTimestamp();
-
-                db.endJourney(new JourneyData(sharedPrefs.getCurrentJourneyId(), travel_time, sharedPrefs.getDistractedTime(), 0, System.currentTimeMillis()));
-            }
             sharedPrefs.setCurrentJourneyId(-1);
-
+            stopLocationUpdates();
+            sharedPrefs.setKeyDistractedTime(0);
             Intent intent = new Intent(this, JourneysActivity.class);
             startActivity(intent);
         } else {
@@ -241,10 +251,10 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
             sharedPrefs.setKeyDistractedTime(0);
             EventBus.getDefault().post(new LocationService.MessageEvent(true));
 
-            long id=db.addJourney(System.currentTimeMillis());
+            long id = db.addJourney(System.currentTimeMillis());
             sharedPrefs.setCurrentJourneyId(id);
 
-            Toast.makeText(this, "Journey added:"+String.valueOf(id), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Journey added:" + String.valueOf(id), Toast.LENGTH_SHORT).show();
 
             List<LocationData> locationDataList = db.getAllLocationPoints(sharedPrefs.getCurrentJourneyId());
 
@@ -353,8 +363,8 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
 
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION ) || ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION )) {
+                    Manifest.permission.ACCESS_COARSE_LOCATION) || ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
@@ -368,7 +378,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
                                 //Prompt the user once explanation has been shown
                                 ActivityCompat.requestPermissions(NewLocationActivity.this,
                                         new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                        Manifest.permission.ACCESS_COARSE_LOCATION},
+                                                Manifest.permission.ACCESS_COARSE_LOCATION},
                                         MY_PERMISSIONS_REQUEST_LOCATION);
                             }
                         })

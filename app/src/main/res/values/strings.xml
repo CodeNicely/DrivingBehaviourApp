@@ -40,6 +40,7 @@
     <string name="travel_time">Travel Time</string>
     <string name="distracted_time">Distracted Time</string>
     <string name="journey_list">Journey List</string>
+    <string name="driving_behaviour">Driving behaviour of journey.</string>
 
 
 </resources>
