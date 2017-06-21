@@ -123,8 +123,8 @@ public class MapsActivity extends AppCompatActivity
     // These are the options for polyline caps, joints and patterns. We use their
     // string resource IDs as identifiers.
     private long journey_id = -1;
-    private long travel_time=0;
-    private long distracted_time=0;
+    private long travel_time = 0;
+    private long distracted_time = 0;
 
     private static final int[] CAP_TYPE_NAME_RESOURCE_IDS = {
             R.string.cap_butt, // Default
@@ -149,7 +149,7 @@ public class MapsActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+        setContentView(R.layout.activity_maps1);
 
         if (getIntent() != null) {
             if (getIntent().getExtras() != null) {
@@ -172,8 +172,8 @@ public class MapsActivity extends AppCompatActivity
         distractedTimeTextview = (TextView) findViewById(R.id.distracted_time);
 
         distractedTimeTextview.setText(
-                "Distracted Time: "+String.valueOf(distracted_time)+" seconds\n"+
-                "Travel Time: "+String.valueOf(travel_time)+" seconds"
+                "Distracted Time: " + String.valueOf(distracted_time) + " seconds\n" +
+                        "Travel Time: " + String.valueOf(travel_time) + " seconds"
         );
 
         mHueBar = (SeekBar) findViewById(R.id.hueSeekBar);
@@ -381,7 +381,7 @@ public class MapsActivity extends AppCompatActivity
 
 
                 Float acceleration = (v2 - v1) / (time2 - time1);
-                Toast.makeText(MapsActivity.this, "Speed: " + String.valueOf(v1) + " Km/hour \n Acceleration:" + String.valueOf(acceleration)+ " meter/ s2", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MapsActivity.this, "Speed: " + String.valueOf(v1) + " Km/hour \n Acceleration:" + String.valueOf(acceleration) + " meter/ s2", Toast.LENGTH_SHORT).show();
 
                 addMarkersToMap(latitude1, longitude1, v1, acceleration);
                 mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {

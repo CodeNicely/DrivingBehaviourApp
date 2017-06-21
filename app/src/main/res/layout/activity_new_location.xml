@@ -64,18 +64,43 @@
             android:id="@+id/locationList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            />
+
+        <TextView
+            android:id="@+id/predictIoEventList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:visibility="gone"
+
+            />
 
         <Button
             android:id="@+id/btnLocationUpdates"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
-            android:background="@color/btn_bg"
-            android:paddingLeft="20dp"
-            android:paddingRight="20dp"
+            android:layout_margin="16dp"
+            android:padding="16dp"
             android:text="@string/btn_start_location_updates"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:background="@color/btn_bg"
+
+            />
+
+        <Button
+            android:layout_margin="16dp"
+            android:padding="16dp"
+            android:id="@+id/predictIoStatus"
+            android:text="@string/predict_io_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:background="@color/btn_bg"
+            android:visibility="gone"
+
+
+            />
 
     </LinearLayout>
 </ScrollView>

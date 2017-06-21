@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -26,9 +27,13 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.List;
 
+import io.predict.PredictIO;
+import io.predict.PredictIOStatus;
 import project.codenicely.behaviour.driving.a1miledrivingapp.R;
 import project.codenicely.behaviour.driving.a1miledrivingapp.helper.LocationService;
 import project.codenicely.behaviour.driving.a1miledrivingapp.helper.SharedPrefs;
@@ -36,6 +41,8 @@ import project.codenicely.behaviour.driving.a1miledrivingapp.helper.sqlite.Datab
 import project.codenicely.behaviour.driving.a1miledrivingapp.location.models.JourneyData;
 import project.codenicely.behaviour.driving.a1miledrivingapp.location.models.LocationData;
 import project.codenicely.behaviour.driving.a1miledrivingapp.trip.view.JourneysActivity;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
 
 public class NewLocationActivity extends Activity implements ConnectionCallbacks,
@@ -69,6 +76,8 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
     private DatabaseHandler db;
 
     private TextView locationListTextView;
+    private Button predictIoStatus;
+    private TextView predictIoEventList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +85,11 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         setContentView(R.layout.activity_new_location);
         startService(new Intent(this, LocationService.class));
 
+        predictIoStatus=(Button)findViewById(R.id.predictIoStatus);
+
+        predictIoEventList=(TextView)findViewById(R.id.predictIoEventList);
+
+        predictIoEventList.setText("Predict IO events : \n\n");
         lblLocation = (TextView) findViewById(R.id.lblLocation);
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
         btnStartLocationUpdates = (Button) findViewById(R.id.btnLocationUpdates);
@@ -123,6 +137,46 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
             }
         });
 
+        predictIoStatus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showMessage(String.valueOf(PredictIO.getInstance(NewLocationActivity.this).getStatus()));
+                EventBus.getDefault().post(new NewLocationActivity.PredictIoEvent(String.valueOf(PredictIO.getInstance(NewLocationActivity.this).getStatus())));
+
+            }
+        });
+
+
+
+    }
+
+
+    private void showMessage(String message ) {
+
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    public static class PredictIoEvent {
+
+        private String message;
+
+        public PredictIoEvent(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        /* Additional fields if needed */
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(PredictIoEvent predictIoEvent) {
+
+        predictIoEventList.append("\n\n"+predictIoEvent.getMessage());
+
+
     }
 
     @Override
@@ -131,6 +185,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         if (mGoogleApiClient != null) {
             mGoogleApiClient.connect();
         }
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -168,6 +223,7 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -485,6 +541,8 @@ public class NewLocationActivity extends Activity implements ConnectionCallbacks
 
         }
     }
+
+
 
 
 }
