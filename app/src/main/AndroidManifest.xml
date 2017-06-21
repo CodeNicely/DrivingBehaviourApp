@@ -44,7 +44,7 @@
 
         <activity android:name=".UnusedActivity" />
         <activity android:name=".location.NewLocationActivity">
-            
+
         </activity>
         <activity
             android:name=".MapsActivity"
